@@ -1,2 +1,3 @@
 *.pth
 *pycache*
+*.model
