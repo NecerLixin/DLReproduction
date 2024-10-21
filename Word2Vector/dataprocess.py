@@ -137,7 +137,7 @@ def main():
         huffman_codes_file=args.huffman_codes_file,
         no_leaf_code2index_file=args.no_leaf_code2index_file,
     )
-    return True
+    print(True)
 
 
 if __name__ == "__main__":
