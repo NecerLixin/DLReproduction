@@ -68,7 +68,7 @@ def main():
     parser.add_argument(
         "--save_path",
         type=str,
-        default="Word2Vector/model_save/model_hier.pth",
+        default="1_Word2Vector/model_save/model_hier.pth",
         help="Path to save model",
     )
     # parser.add_argument(
@@ -80,32 +80,32 @@ def main():
     parser.add_argument(
         "--train_data_file",
         type=str,
-        default="Word2Vector/data/processed_data.json",
-        help="File path of train dataset.",
+        default="1_Word2Vector/data/processed_data.json",
+        help="",
     )
     parser.add_argument(
         "--word2id_file",
         type=str,
-        default="Word2Vector/data/word2id.json",
-        help="File path of train dataset.",
+        default="1_Word2Vector/data/word2id.json",
+        help="",
     )
     parser.add_argument(
         "--huffman_code_file",
         type=str,
-        default="Word2Vector/data/huffman_codes.json",
-        help="File path of train dataset.",
+        default="1_Word2Vector/data/huffman_codes.json",
+        help="",
     )
     parser.add_argument(
         "--no_leaf_code2index_file",
         type=str,
-        default="Word2Vector/data/no_leaf_code2index.json",
-        help="File path of train dataset.",
+        default="1_Word2Vector/data/no_leaf_code2index.json",
+        help="",
     )
     parser.add_argument(
         "--embedding_dim",
         type=int,
         default=100,
-        help="File path of train dataset.",
+        help="",
     )
 
     parser.add_argument("--info", type=str, default="Classification bert base model.")

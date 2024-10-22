@@ -68,7 +68,7 @@ def main():
     parser.add_argument(
         "--save_path",
         type=str,
-        default="Word2Vector/model_save/model_neg.pth",
+        default="1_Word2Vector/model_save/model_neg.pth",
         help="Path to save model",
     )
     # parser.add_argument(
@@ -80,31 +80,31 @@ def main():
     parser.add_argument(
         "--train_data_file",
         type=str,
-        default="Word2Vector/data/processed_data.json",
+        default="1_Word2Vector/data/processed_data.json",
         help="",
     )
     parser.add_argument(
         "--word2id_file",
         type=str,
-        default="Word2Vector/data/word2id.json",
+        default="1_Word2Vector/data/word2id.json",
         help="",
     )
     parser.add_argument(
         "--huffman_code_file",
         type=str,
-        default="Word2Vector/data/huffman_codes.json",
+        default="1_Word2Vector/data/huffman_codes.json",
         help="",
     )
     parser.add_argument(
         "--word_freq_file",
         type=str,
-        default="Word2Vector/data/words_freq.json",
+        default="1_Word2Vector/data/words_freq.json",
         help="File path of wrod frequence.",
     )
     parser.add_argument(
         "--no_leaf_code2index_file",
         type=str,
-        default="Word2Vector/data/no_leaf_code2index.json",
+        default="1_Word2Vector/data/no_leaf_code2index.json",
         help="",
     )
     parser.add_argument(
