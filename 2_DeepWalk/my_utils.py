@@ -4,6 +4,8 @@ import pandas as pd
 from tqdm import tqdm
 import numpy as np
 import random
+from datetime import datetime
+import json
 
 
 def one_node_random_walk(
@@ -185,3 +187,62 @@ class SkipGramKLDataset(SkipGramHierarchicalSoftmaxDataset):
         input_nodes = torch.LongTensor(input_nodes)
         prob_dists = torch.stack(prob_dists, dim=0)
         return input_nodes, prob_dists
+
+
+class SkipGramSoftmaxDataset(SkipGramHierarchicalSoftmaxDataset):
+    def __init__(
+        self,
+        nodes_file: str,
+        edges_file: str,
+        window_size: int,
+        walks_num: int,
+        t: int,
+        bias: int,
+    ) -> None:
+        super().__init__(nodes_file, edges_file, window_size, walks_num, t, bias)
+
+    def __getitem__(self, index):
+        sample = self.data[index]
+        sample = [node - 1 for node in sample]
+        input_node = sample[self.window_size]
+        context_nodes = sample[: self.window_size] + sample[self.window_size + 1 :]
+        return {"input_node": input_node, "context_node": context_nodes}
+
+    def collate_fn(batch):
+        input_nodes = [f["input_node"] for f in batch]
+        context_nodes = [f["context_node"] for f in batch]
+        input_nodes = torch.LongTensor(input_nodes)
+        context_nodes = torch.LongTensor(context_nodes)
+        return input_nodes, context_nodes
+
+
+class LogRecorder:
+    def __init__(self, info: str = None, config: dict = None, verbose: bool = False):
+        self.info = info
+        self.config = config
+        self.log = []
+        self.verbose = verbose
+        self.record = None
+        self.time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.best_score = None
+
+    def add_log(self, **kwargs):
+        if self.verbose:
+            print(kwargs)
+        self.log.append(kwargs)
+
+    def to_dict(self):
+        record = dict()
+        record["info"] = self.info
+        record["config"] = self.config
+        record["log"] = self.log
+        record["best_score"] = self.best_score
+        record["time"] = self.time
+        self.record = record
+        return self.record
+
+    def save(self, path):
+        if self.record == None:
+            self.to_dict()
+        with open(path, "w") as f:
+            json.dump(self.record, f, ensure_ascii=False)
