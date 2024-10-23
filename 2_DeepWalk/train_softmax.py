@@ -106,7 +106,12 @@ def main():
         default="cpu",
         help="Device used to training model",
     )
-    parser.add_argument("--lr", type=float, default=0.01, help="Learning rate.")
+    parser.add_argument(
+        "--lr",
+        type=float,
+        default=0.025,
+        help="Learning rate.",
+    )
     parser.add_argument(
         "--save_path",
         type=str,
