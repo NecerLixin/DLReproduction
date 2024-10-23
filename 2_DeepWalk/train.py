@@ -102,7 +102,7 @@ def main():
     parser.add_argument(
         "--walks_num",
         type=int,
-        default=1,
+        default=10,
         help="Num of random walks",
     )
     parser.add_argument(
