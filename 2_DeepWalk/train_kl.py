@@ -1,4 +1,4 @@
-from my_utils import SkipGramKLDataset
+from my_utils import SkipGramKLDataset, LogRecorder
 import torch
 from torch.utils.data import DataLoader
 from model import SkipGramKLModel
@@ -10,6 +10,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
 import numpy as np
+from datetime import datetime
 
 device = None
 
@@ -18,6 +19,7 @@ def train(
     args,
     model: SkipGramKLModel,
     train_dataset: SkipGramKLDataset,
+    log_recorder,
 ):
     dataloader = DataLoader(
         train_dataset,
@@ -43,8 +45,16 @@ def train(
             optimizer.step()
             total_loss += loss
             scheduler.step()
-        print(f"Epoch {epoch+1}, Loss: {total_loss/len(dataloader)}")
         torch.save(model.state_dict(), args.save_path)
+        f1_micro, f1_macor = eval(args, model)
+        print(
+            f"Epoch {epoch+1}, Loss: {total_loss/len(dataloader)}, F1_micro: {f1_micro}, F1_marcor: {f1_macor}"
+        )
+        log_recorder.add_log(
+            f1_micor=f1_micro,
+            f1_macor=f1_macor,
+            epoch=epoch + 1,
+        )
 
 
 def eval(
@@ -54,16 +64,16 @@ def eval(
     nodes_features = model.embedding.weight.detach().numpy()
     nodes = pd.read_csv(args.nodes_file, names=["node"])
     groups = pd.read_csv(args.groups_file, names=["group"])
-    group_edges = pd.read_csv(args.group_edges, names=["node", "label"])
+    group_edges = pd.read_csv(args.group_edges_file, names=["node", "label"])
     labels = np.zeros([nodes.shape[0], groups.shape[0]])
     for i in range(group_edges.shape[0]):
         node = group_edges["node"].iloc[i]
-        group = group_edges["group"].iloc[i]
+        group = group_edges["label"].iloc[i]
         labels[node - 1][group - 1] = 1
     X = nodes_features
     Y = labels
     X_train, X_test, Y_train, Y_test = train_test_split(
-        X, Y, test_size=0.7, random_state=42
+        X, Y, test_size=0.3, random_state=42
     )
     base_classifier = LogisticRegression(solver="liblinear")
     ovr_classifier = OneVsRestClassifier(base_classifier)
@@ -91,7 +101,7 @@ def main():
     parser.add_argument(
         "--device",
         type=str,
-        default="cuda",
+        default="cpu",
         help="Device used to training model",
     )
     parser.add_argument(
@@ -174,7 +184,13 @@ def main():
         embedding_dim=args.embedding_dim,
     )
     model.to(device)
-    train(args=args, model=model, train_dataset=dataset)
+    args_dict = vars(args)
+    log_recorder = LogRecorder(config=args_dict, info="Deep Walk", verbose=False)
+    try:
+        train(args=args, model=model, train_dataset=dataset, log_recorder=log_recorder)
+    except:
+        time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_recorder.save(f"2_DeepWalk/log/{time_str}.json")
 
 
 if __name__ == "__main__":
