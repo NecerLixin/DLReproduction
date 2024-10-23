@@ -131,3 +131,57 @@ class SkipGramHierarchicalSoftmaxDataset(Dataset):
         bin_tree_codes = torch.tensor(bin_tree_codes)  # [b, s, h]
         path_nodes = torch.tensor(path_nodes)  # [b, s, h]
         return input_nodes, bin_tree_codes, path_nodes
+
+
+class SkipGramKLDataset(SkipGramHierarchicalSoftmaxDataset):
+    def __init__(
+        self,
+        nodes_file: str,
+        edges_file: str,
+        window_size: int,
+        walks_num: int,
+        t: int,
+        bias: int,
+    ) -> None:
+        super().__init__(nodes_file, edges_file, window_size, walks_num, t, bias)
+
+    def _gaussian_probability_distribution(self, n, mu=0, sigma=1):
+        """
+        生成一个长度为n的正态分布概率数组，使得中间概率最大，符合正态分布 (使用PyTorch)。
+        :param n: 生成的概率分布的长度
+        :param mu: 正态分布的均值
+        :param sigma: 正态分布的标准差
+        :return: 长度为n的概率分布，概率和为1
+        """
+        # 在 [-3, 3] 区间内生成 n 个点，使用 torch.linspace
+        x = torch.linspace(-3, 3, n)
+
+        # 计算正态分布的概率密度值，使用 torch 的张量操作
+        pdf = torch.exp(-0.5 * ((x - mu) / sigma) ** 2) / (
+            sigma * torch.sqrt(torch.tensor(2 * torch.pi))
+        )
+
+        # 归一化，使得所有概率和为1
+        pdf /= torch.sum(pdf)
+
+        return pdf
+
+    def __getitem__(self, index):
+        sample = self.data[index]
+        sample = [node - 1 for node in sample]
+        input_node = sample[self.window_size]
+        context_nodes = sample[: self.window_size] + sample[self.window_size + 1 :]
+        context_nodes_pdf = self._gaussian_probability_distribution(
+            len(context_nodes), mu=0, sigma=1
+        )
+        prob_dist = torch.zeros([self.nodes.shape[0]]) + 1e-10
+        prob_dist[context_nodes] = context_nodes_pdf
+        prob_dist = prob_dist / prob_dist.sum()
+        return {"input_node": input_node, "prob_dist": prob_dist}
+
+    def collate_fn(batch):
+        input_nodes = [f["input_node"] for f in batch]
+        prob_dists = [f["prob_dist"] for f in batch]
+        input_nodes = torch.LongTensor(input_nodes)
+        prob_dists = torch.stack(prob_dists, dim=0)
+        return input_nodes, prob_dists
